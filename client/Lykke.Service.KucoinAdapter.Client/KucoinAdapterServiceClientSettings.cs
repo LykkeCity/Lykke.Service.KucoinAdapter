@@ -1,5 +1,3 @@
-using System;
-
 namespace Lykke.Service.KucoinAdapter.Client 
 {
     public class KucoinAdapterServiceClientSettings 

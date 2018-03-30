@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
+using Common;
 using Common.Log;
 using Lykke.Service.KucoinAdapter.Core.Services;
 using Lykke.Service.KucoinAdapter.Settings.ServiceSettings;
@@ -45,6 +46,13 @@ namespace Lykke.Service.KucoinAdapter.Modules
 
             builder.RegisterType<ShutdownManager>()
                 .As<IShutdownManager>();
+
+            builder.RegisterType<OrderbookPublishingService>()
+                .WithParameter("orderbookSettings", _settings.CurrentValue.Orderbooks)
+                .WithParameter("rabbitMqSettings", _settings.CurrentValue.RabbitMq)
+                .As<IStopable>()
+                .AsSelf()
+                .SingleInstance();
 
             // TODO: Add your dependencies here
 

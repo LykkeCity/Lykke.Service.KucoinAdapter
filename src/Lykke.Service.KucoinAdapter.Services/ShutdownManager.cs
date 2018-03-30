@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
@@ -16,9 +17,14 @@ namespace Lykke.Service.KucoinAdapter.Services
         private readonly ILog _log;
         private readonly List<IStopable> _items = new List<IStopable>();
 
-        public ShutdownManager(ILog log)
+        public ShutdownManager(ILog log, IEnumerable<IStopable> stopables)
         {
             _log = log;
+
+            foreach (var s in stopables)
+            {
+                Register(s);
+            }
         }
 
         public void Register(IStopable stopable)
@@ -31,7 +37,14 @@ namespace Lykke.Service.KucoinAdapter.Services
             // TODO: Implement your shutdown logic here. Good idea is to log every step
             foreach (var item in _items)
             {
-                item.Stop();
+                try
+                {
+                    item.Stop();
+                }
+                catch (Exception ex)
+                {
+                    _log.WriteWarning(nameof(StopAsync), null, $"Unable to stop {item.GetType().Name}", ex);
+                }
             }
 
             await Task.CompletedTask;

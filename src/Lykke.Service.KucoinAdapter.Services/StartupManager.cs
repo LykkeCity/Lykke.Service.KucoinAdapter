@@ -14,15 +14,19 @@ namespace Lykke.Service.KucoinAdapter.Services
     public class StartupManager : IStartupManager
     {
         private readonly ILog _log;
+        private readonly OrderbookPublishingService _publishingService;
 
-        public StartupManager(ILog log)
+        public StartupManager(ILog log, OrderbookPublishingService publishingService)
         {
             _log = log;
+            _publishingService = publishingService;
         }
 
         public async Task StartAsync()
         {
             // TODO: Implement your startup logic here. Good idea is to log every step
+
+            _publishingService.Start();
 
             await Task.CompletedTask;
         }
