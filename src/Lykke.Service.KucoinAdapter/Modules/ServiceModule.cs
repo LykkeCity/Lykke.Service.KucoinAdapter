@@ -47,11 +47,22 @@ namespace Lykke.Service.KucoinAdapter.Modules
             builder.RegisterType<ShutdownManager>()
                 .As<IShutdownManager>();
 
+            var kucoinAdapterSettings = _settings.CurrentValue;
+
+            builder.RegisterType<KucoinInstrumentConverter>()
+                .WithParameter("knownCurrencies", kucoinAdapterSettings.Orderbooks.CurrencyMapping.KnownCurrencies)
+                .WithParameter("rename", kucoinAdapterSettings.Orderbooks.CurrencyMapping.Rename)
+                .AsSelf()
+                .SingleInstance();
+
             builder.RegisterType<OrderbookPublishingService>()
-                .WithParameter("orderbookSettings", _settings.CurrentValue.Orderbooks)
-                .WithParameter("rabbitMqSettings", _settings.CurrentValue.RabbitMq)
+                .WithParameter("orderbookSettings", kucoinAdapterSettings.Orderbooks)
+                .WithParameter("rabbitMqSettings", kucoinAdapterSettings.RabbitMq)
                 .As<IStopable>()
                 .AsSelf()
+                .SingleInstance();
+
+            builder.RegisterInstance(kucoinAdapterSettings)
                 .SingleInstance();
 
             // TODO: Add your dependencies here

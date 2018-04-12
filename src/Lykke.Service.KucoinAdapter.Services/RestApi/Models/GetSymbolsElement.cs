@@ -1,7 +1,13 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
 {
+    public sealed class Order {
+        public DateTime DateTime { get; set; }
+
+    }
+
     public sealed class GetSymbolsElement
     {
         [JsonProperty("coinType")]

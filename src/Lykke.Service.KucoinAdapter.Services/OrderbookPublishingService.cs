@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Reactive;
 using System.Reactive.Disposables;
@@ -16,6 +16,7 @@ namespace Lykke.Service.KucoinAdapter.Services
     {
         private readonly OrderbookSettings _orderbookSettings;
         private readonly RabbitMqSettings _rabbitMqSettings;
+        private readonly KucoinInstrumentConverter _converter;
         private readonly ILog _log;
         private readonly object _syncRoot = new object();
         private IDisposable _subscription;
@@ -23,29 +24,38 @@ namespace Lykke.Service.KucoinAdapter.Services
         public OrderbookPublishingService(
             OrderbookSettings orderbookSettings,
             RabbitMqSettings rabbitMqSettings,
+            KucoinInstrumentConverter converter,
             ILog log)
         {
             _orderbookSettings = orderbookSettings;
             _rabbitMqSettings = rabbitMqSettings;
+            _converter = converter;
             _log = log;
         }
 
         public void Start()
         {
-            var exchange = new KucoinExchange(
-                _orderbookSettings.CurrencyMapping,
-                _log,
-                _orderbookSettings.Credentials,
-                _orderbookSettings.Timeouts);
+            if (_orderbookSettings.Enabled
+#if (DEBUG)
+                 && false
+#endif
+            )
+            {
+                var exchange = new KucoinExchange(
+                    _log,
+                    _orderbookSettings.Credentials,
+                    _orderbookSettings.Timeouts,
+                    _converter);
 
-            var workers = _orderbookSettings.Instruments
-                .Select(x => StartPublishing(x, exchange));
+                var workers = _orderbookSettings.Instruments
+                    .Select(x => StartPublishing(new LykkeInstrument(x), exchange));
 
-            _subscription = new CompositeDisposable(workers);
+                _subscription = new CompositeDisposable(workers);
+            }
         }
 
         private IDisposable StartPublishing(
-            string instrument,
+            LykkeInstrument instrument,
             KucoinExchange exchange)
         {
             var orderBooks = exchange
@@ -66,8 +76,8 @@ namespace Lykke.Service.KucoinAdapter.Services
                 .Publish().RefCount();
 
             return Observable.Merge(
-                    ReportStatistic(orderBooksPublishWorker, _rabbitMqSettings.OrderBooks.Exchanger, instrument),
-                    ReportStatistic(tickPricePublishWorker, _rabbitMqSettings.TickPrices.Exchanger, instrument),
+                    ReportStatistic(orderBooksPublishWorker, _rabbitMqSettings.OrderBooks.Exchanger, instrument.Value),
+                    ReportStatistic(tickPricePublishWorker, _rabbitMqSettings.TickPrices.Exchanger, instrument.Value),
                     tickPricePublishWorker,
                     orderBooksPublishWorker)
                 .Subscribe();

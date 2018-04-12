@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Service.KucoinAdapter.Services;
 using Lykke.Service.KucoinAdapter.Services.RestApi;
+using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using NUnit.Framework;
 
 namespace Lykke.Service.KucoinAdapter.Tests
@@ -31,7 +32,7 @@ namespace Lykke.Service.KucoinAdapter.Tests
                 .Distinct()
                 .ToArray();
 
-            _converter = new KucoinInstrument(
+            _converter = new KucoinInstrumentConverter(
                 knownCurrencies,
                 new Dictionary<string, string>
                 {
@@ -40,7 +41,7 @@ namespace Lykke.Service.KucoinAdapter.Tests
                 });
         }
 
-        private static KucoinInstrument _converter;
+        private static KucoinInstrumentConverter _converter;
 
         private static string GetApiKey()
         {
@@ -72,28 +73,28 @@ namespace Lykke.Service.KucoinAdapter.Tests
         [TestCaseSource(nameof(GetKucoinInstruments))]
         public void all_instruments_could_be_used_as_lykke_instruments(string instrument)
         {
-            var (symbol1, symbol2) = _converter.FromKucoinInstrument(instrument);
+            var (symbol1, symbol2) = _converter.FromKucoinInstrument(new KucoinInstrument(instrument));
             var lykkeInstrument = _converter.ToLykkeInstrument(symbol1, symbol2);
             var (s1, s2) = _converter.FromLykkeInstrument(lykkeInstrument);
-            Assert.AreEqual(instrument, _converter.ToKucoinInstrument(s1, s2));
+            Assert.AreEqual(instrument, _converter.ToKucoinInstrument(s1, s2).Value);
         }
 
         [Test]
         public void concrete_conversion_example()
         {
-            var (s1, s2) =  _converter.FromKucoinInstrument("BTC-DENT");
+            var (s1, s2) =  _converter.FromKucoinInstrument(new KucoinInstrument("BTC-DENT"));
             Assert.AreEqual("BTC", s1);
             Assert.AreEqual("DENT", s2);
 
             var lykkeInstrument = _converter.ToLykkeInstrument(s1, s2);
-            Assert.AreEqual("XBTDENT", lykkeInstrument);
+            Assert.AreEqual("XBTDENT", lykkeInstrument.Value);
 
             var (k1, k2) = _converter.FromLykkeInstrument(lykkeInstrument);
             Assert.AreEqual("BTC", k1);
             Assert.AreEqual("DENT", k2);
 
             var kucoinInstrument = _converter.ToKucoinInstrument(k1, k2);
-            Assert.AreEqual("BTC-DENT", kucoinInstrument);
+            Assert.AreEqual("BTC-DENT", kucoinInstrument.Value);
         }
     }
 }

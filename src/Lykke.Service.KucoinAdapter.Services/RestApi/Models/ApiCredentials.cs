@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace Lykke.Service.KucoinAdapter.Services.RestApi
+namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
 {
     public sealed class ApiCredentials
     {

@@ -8,6 +8,7 @@ using Lykke.Common.ApiLibrary.Middleware;
 using Lykke.Common.ApiLibrary.Swagger;
 using Lykke.Logs;
 using Lykke.Service.KucoinAdapter.Core.Services;
+using Lykke.Service.KucoinAdapter.Middleware;
 using Lykke.Service.KucoinAdapter.Settings;
 using Lykke.Service.KucoinAdapter.Modules;
 using Lykke.SettingsReader;
@@ -21,6 +22,7 @@ namespace Lykke.Service.KucoinAdapter
 {
     public class Startup
     {
+        private IReloadingManager<AppSettings> _appSettings;
         public IHostingEnvironment Environment { get; }
         public IContainer ApplicationContainer { get; private set; }
         public IConfigurationRoot Configuration { get; }
@@ -50,14 +52,17 @@ namespace Lykke.Service.KucoinAdapter
                 services.AddSwaggerGen(options =>
                 {
                     options.DefaultLykkeConfiguration("v1", "KucoinAdapter API");
+                    options.OperationFilter<AddLykkeAuthorizationHeaderFilter>();
                 });
 
                 var builder = new ContainerBuilder();
-                var appSettings = Configuration.LoadSettings<AppSettings>();
+                _appSettings = Configuration.LoadSettings<AppSettings>();
 
-                Log = CreateLogWithSlack(services, appSettings);
+                XApiKeyAuthAttribute.Credentials = _appSettings.CurrentValue.KucoinAdapterService.Clients;
 
-                builder.RegisterModule(new ServiceModule(appSettings.Nested(x => x.KucoinAdapterService), Log));
+                Log = CreateLogWithSlack(services, _appSettings);
+
+                builder.RegisterModule(new ServiceModule(_appSettings.Nested(x => x.KucoinAdapterService), Log));
                 builder.Populate(services);
                 ApplicationContainer = builder.Build();
 
@@ -81,6 +86,8 @@ namespace Lykke.Service.KucoinAdapter
 
                 app.UseLykkeForwardedHeaders();
                 app.UseLykkeMiddleware("KucoinAdapter", ex => new { Message = "Technical problem" });
+
+                app.UseAuthenticationMiddleware(_appSettings, Log);
 
                 app.UseMvc();
                 app.UseSwagger(c =>

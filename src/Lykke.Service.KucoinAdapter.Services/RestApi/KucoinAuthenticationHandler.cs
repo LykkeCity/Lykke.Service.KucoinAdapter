@@ -1,11 +1,11 @@
 ﻿using System;
-using System.Collections.Specialized;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Common;
+using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using MoreLinq;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi
@@ -23,15 +23,16 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken ct)
         {
-            NameValueCollection parameters;
+            var parameters = request.RequestUri.ParseQueryString();
 
             if (request.Content is FormUrlEncodedContent form)
             {
-                parameters = await form.ReadAsFormDataAsync(ct);
-            }
-            else
-            {
-                parameters = request.RequestUri.ParseQueryString();
+                var formParameters = await form.ReadAsFormDataAsync(ct);
+
+                foreach (var k in formParameters.AllKeys)
+                {
+                    parameters.Add(k, formParameters[k]);
+                }
             }
 
             var queryString = string.Join(

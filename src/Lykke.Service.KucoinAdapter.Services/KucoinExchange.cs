@@ -5,39 +5,37 @@ using System.Threading.Tasks;
 using Common.Log;
 using Lykke.Common.ExchangeAdapter.Contracts;
 using Lykke.Service.KucoinAdapter.Services.RestApi;
+using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using Lykke.Service.KucoinAdapter.Services.Settings;
 
 namespace Lykke.Service.KucoinAdapter.Services
 {
     public sealed class KucoinExchange
     {
-        private readonly CurrencyMapping _currencyMapping;
         private readonly ILog _log;
         private readonly ApiCredentials _credentials;
         private readonly TimeoutSettings _timeouts;
+        private readonly KucoinInstrumentConverter _converter;
         public const string ExchangeName = "kucoin";
 
         public KucoinExchange(
-            CurrencyMapping currencyMapping,
             ILog log,
             ApiCredentials credentials,
-            TimeoutSettings timeouts)
+            TimeoutSettings timeouts,
+            KucoinInstrumentConverter converter)
         {
-            _currencyMapping = currencyMapping;
             _log = log;
             _credentials = credentials;
             _timeouts = timeouts;
+            _converter = converter;
         }
 
-        public IObservable<OrderBook> GetOrderbooks(string lykkeInstrument, uint limit)
+        public IObservable<OrderBook> GetOrderbooks(LykkeInstrument lykkeInstrument, uint limit)
         {
             return Observable.Create<OrderBook>(async (obs, ct) =>
             {
-                var converter = new KucoinInstrument(_currencyMapping.KnownCurrencies, _currencyMapping.Rename);
-
                 var client = new RestApiClient(_credentials, _log);
-                var (s1, s2) = converter.FromLykkeInstrument(lykkeInstrument);
-                var kucoinInstrument = converter.ToKucoinInstrument(s1, s2);
+                var kucoinInstrument = _converter.ToKucoinInstrument(lykkeInstrument);
 
                 while (!ct.IsCancellationRequested)
                 {

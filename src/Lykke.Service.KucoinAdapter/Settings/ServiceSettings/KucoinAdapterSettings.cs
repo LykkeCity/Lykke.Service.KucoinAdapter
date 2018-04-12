@@ -1,5 +1,5 @@
 ﻿using System.Collections.Generic;
-using Lykke.Service.KucoinAdapter.Services.RestApi;
+using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using Lykke.Service.KucoinAdapter.Services.Settings;
 
 namespace Lykke.Service.KucoinAdapter.Settings.ServiceSettings
