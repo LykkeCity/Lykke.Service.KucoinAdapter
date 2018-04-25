@@ -14,16 +14,16 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
         public string Symbol { get; set; }
 
         [JsonProperty("lastDealPrice")]
-        public decimal LastDealPrice { get; set; }
+        public decimal? LastDealPrice { get; set; }
 
         [JsonProperty("buy")]
-        public decimal Buy { get; set; }
+        public decimal? Buy { get; set; }
 
         [JsonProperty("sell")]
-        public decimal Sell { get; set; }
+        public decimal? Sell { get; set; }
 
         [JsonProperty("change")]
-        public decimal Change { get; set; }
+        public decimal? Change { get; set; }
 
         [JsonProperty("coinTypePair")]
         public string CoinTypePair { get; set; }
@@ -32,10 +32,10 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
         public long Sort { get; set; }
 
         [JsonProperty("feeRate")]
-        public decimal FeeRate { get; set; }
+        public decimal? FeeRate { get; set; }
 
         [JsonProperty("volValue")]
-        public decimal VolValue { get; set; }
+        public decimal? VolValue { get; set; }
 
         [JsonProperty("high")]
         public decimal? High { get; set; }
@@ -44,13 +44,13 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
         public long Datetime { get; set; }
 
         [JsonProperty("vol")]
-        public decimal Vol { get; set; }
+        public decimal? Vol { get; set; }
 
         [JsonProperty("low")]
         public decimal? Low { get; set; }
 
         [JsonProperty("changeRate")]
-        public decimal ChangeRate { get; set; }
+        public decimal? ChangeRate { get; set; }
 
         [JsonProperty("stick")]
         public bool Stick { get; set; }
