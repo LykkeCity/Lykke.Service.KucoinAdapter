@@ -4,7 +4,7 @@ using Common.Log;
 using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
 using Newtonsoft.Json;
 
-namespace Lykke.Service.KucoinAdapter.Services.RestApi
+namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
 {
     public sealed class KucoinOrderbook
     {
@@ -28,8 +28,8 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
         public OrderBook ToOrderbook(ILog log, string asset)
         {
             return new OrderBook(log, KucoinExchange.ExchangeName, asset, DateTime.UtcNow,
-                bids: Sell.Select(x => new OrderBookItem(x[0], x[1])),
-                asks: Buy.Select(x => new OrderBookItem(x[0], x[1])));
+                bids: Buy.Select(x => new OrderBookItem(x[0], x[1])),
+                asks: Sell.Select(x => new OrderBookItem(x[0], x[1])));
         }
     }
 }
