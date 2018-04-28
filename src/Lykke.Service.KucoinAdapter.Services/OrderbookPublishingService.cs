@@ -60,10 +60,12 @@ namespace Lykke.Service.KucoinAdapter.Services
             var tickPrices = orderBooks.Select(TickPrice.FromOrderBook).Where(x => x != null).DistinctUntilChanged();
 
             var orderBooksPublishWorker = ListenAndPublish(orderBooks, _rabbitMqSettings.OrderBooks)
-                .Select(_ => Unit.Default);
+                .Select(_ => Unit.Default)
+                .Publish().RefCount();
 
             var tickPricePublishWorker = ListenAndPublish(tickPrices, _rabbitMqSettings.TickPrices)
-                .Select(_ => Unit.Default);;
+                .Select(_ => Unit.Default)
+                .Publish().RefCount();
 
             return Observable.Merge(
                     ReportStatistic(orderBooksPublishWorker, _rabbitMqSettings.OrderBooks.Exchanger, instrument),
