@@ -53,7 +53,6 @@ namespace Lykke.Service.KucoinAdapter.Services
                     }
                     catch (Exception ex)
                     {
-                        _log.WriteError(nameof(KucoinExchange), "", ex);
                         obs.OnError(ex);
                     }
 

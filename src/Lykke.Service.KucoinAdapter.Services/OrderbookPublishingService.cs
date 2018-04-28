@@ -51,7 +51,7 @@ namespace Lykke.Service.KucoinAdapter.Services
             var orderBooks = exchange.GetOrderbooks(instrument)
                 .Select(x => x.DetectNegativeSpread())
                 .Do(x => ReportNegativeSpread(x.Item1, x.Item2),
-                    err => _log.WriteWarning(nameof(OrderbookPublishingService), "orderbooks", err.ToString()))
+                    err => _log.WriteInfo(nameof(OrderbookPublishingService), "orderbooks", err.ToString()))
                 .Where(x => !x.Item1).Select(x => x.Item3)
                 .RetryWithBackoff()
                 .Publish()

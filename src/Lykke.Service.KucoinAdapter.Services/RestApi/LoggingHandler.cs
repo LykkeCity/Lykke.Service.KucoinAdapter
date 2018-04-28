@@ -36,7 +36,7 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
             }
             catch (Exception ex)
             {
-                _log.WriteWarning(nameof(LoggingHandler), query, $"Request to {query} failed in {sw.Elapsed}: " + ex);
+                _log.WriteInfo(nameof(LoggingHandler), query, $"Request to {query} failed in {sw.Elapsed}: " + ex);
                 throw;
             }
         }
