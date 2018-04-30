@@ -53,6 +53,7 @@ namespace Lykke.Service.KucoinAdapter.Services
                 .Do(x => ReportNegativeSpread(x.Item1, x.Item2),
                     err => _log.WriteInfo(nameof(OrderbookPublishingService), "orderbooks", err.ToString()))
                 .Where(x => !x.Item1).Select(x => x.Item3)
+                .Where(SkipEmptyOrderBooks)
                 .RetryWithBackoff()
                 .Publish()
                 .RefCount();
@@ -73,6 +74,11 @@ namespace Lykke.Service.KucoinAdapter.Services
                     tickPricePublishWorker,
                     orderBooksPublishWorker)
                 .Subscribe();
+        }
+
+        private static bool SkipEmptyOrderBooks(OrderBook ob)
+        {
+            return ob.Asks.Any() || ob.Bids.Any();
         }
 
         private void ReportNegativeSpread(bool hasNegativeSpread, string error)
