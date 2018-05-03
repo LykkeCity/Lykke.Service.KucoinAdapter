@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
 using Lykke.Service.KucoinAdapter.Middleware;
 using Lykke.Service.KucoinAdapter.Services;
-using Lykke.Service.KucoinAdapter.Services.RestApi;
 using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using Lykke.Service.KucoinAdapter.Settings.ServiceSettings;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Formatters.Internal;
 using Order = Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts.Order;
 
 namespace Lykke.Service.KucoinAdapter.Controllers
@@ -107,19 +104,26 @@ namespace Lykke.Service.KucoinAdapter.Controllers
 
         [HttpPost("createLimitOrder")]
         [XApiKeyAuth]
-        public async Task<LimitOrderCreated> CreateLimitOrder([FromBody] CreateLimitOrderCommand order)
+        public async Task<IActionResult> CreateLimitOrder([FromBody] CreateLimitOrderCommand order)
         {
             var kucoinInstrument = _converter.ToKucoinInstrument(new LykkeInstrument(order.Instrument));
 
-            var orderId = await this.RestApi().CreateLimitOrder(
-                kucoinInstrument,
-                order.Amount,
-                order.Price,
-                order.TradeType);
+            try
+            {
+                var orderId = await this.RestApi().CreateLimitOrder(
+                    kucoinInstrument,
+                    order.Amount,
+                    order.Price,
+                    order.TradeType);
 
-            var apiId = new KucoinOrderId(kucoinInstrument, orderId, order.TradeType).ToApiId();
+                var apiId = new KucoinOrderId(kucoinInstrument, orderId, order.TradeType).ToApiId();
 
-            return new LimitOrderCreated { Id = apiId };
+                return Ok(new LimitOrderCreated { Id = apiId });
+            }
+            catch (VolumeTooSmallException ex)
+            {
+                return BadRequest($"volumeTooSmall: {ex.Message}");
+            }
         }
 
         [HttpPost("cancelOrder")]

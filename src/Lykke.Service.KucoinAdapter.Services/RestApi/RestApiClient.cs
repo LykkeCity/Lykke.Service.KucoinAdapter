@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
@@ -94,6 +96,14 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
             }
         }
 
+        public static string CreateQuery(params (string, object)[] values)
+        {
+            var parts = values.Select(x =>
+                $"{WebUtility.UrlEncode(x.Item1)}" +
+                $"={WebUtility.UrlEncode(string.Format(CultureInfo.InvariantCulture, "{0}", x.Item2))}");
+            return string.Join("&", parts);
+        }
+
         public async Task<byte[]> CreateLimitOrder(
             KucoinInstrument kucoinInstrument,
             decimal amount,
@@ -101,18 +111,19 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
             TradeType tradeType,
             CancellationToken ct = default(CancellationToken))
         {
-            var ktt = ConvertTradeType(tradeType);
+            var query = CreateQuery(("symbol", kucoinInstrument.Value));
 
-            var command = new CreateLimitOrder
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                TradeType = ktt,
-                Amount = amount,
-                Price = price
-            };
+                { "type", ConvertTradeType(tradeType) },
+                { "price", price.ToString(CultureInfo.InvariantCulture) },
+                { "amount", amount.ToString(CultureInfo.InvariantCulture) }
 
-            using (var msg = await _client.PostAsJsonAsync(
-                $"order?symbol={WebUtility.UrlEncode(kucoinInstrument.Value)}",
-                command,
+            });
+
+            using (var msg = await _client.PostAsync(
+                $"order?{query}",
+                content,
                 ct))
             {
                 var response = await msg.ReadAsKucoin<CreateLimitOrderResponse>(ct);
@@ -120,37 +131,32 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
             }
         }
 
-        private static KucoinTradeType ConvertTradeType(TradeType tradeType)
+        private static string ConvertTradeType(TradeType tradeType)
         {
-            KucoinTradeType ktt;
             switch (tradeType)
             {
                 case TradeType.Buy:
-                    ktt = KucoinTradeType.Buy;
-                    break;
+                    return "BUY";
                 case TradeType.Sell:
-                    ktt = KucoinTradeType.Sell;
-                    break;
+                    return "SELL";
                 default:
                     throw new ArgumentOutOfRangeException(nameof(tradeType), tradeType, null);
             }
-
-            return ktt;
         }
 
         public async Task CancelLimitOrder(
             KucoinOrderId orderId,
             CancellationToken ct = default(CancellationToken))
         {
-            var cmd = new CancelLimitOrderCommand
+            var content = new FormUrlEncodedContent(new Dictionary<string, string>
             {
-                OrderId = orderId.OrderId.ToHexString(),
-                TradeType = ConvertTradeType(orderId.TradeType)
-            };
+                { "orderId", orderId.OrderId.ToHexString() },
+                { "type", ConvertTradeType(orderId.TradeType) }
+            });
 
             using (var msg = await _client.PostAsJsonAsync(
                 $"cancel-order?symbol={orderId.KucoinInstrument.Value}",
-                cmd,
+                content,
                 ct))
             {
                 await msg.ReadAsKucoin<JToken>(ct);

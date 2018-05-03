@@ -22,6 +22,11 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
             CancellationToken cancellationToken)
         {
             var query = $"{request.Method} {request.RequestUri}";
+            if (request.Method == HttpMethod.Post)
+            {
+                query += " <- " + await request.Content.ReadAsStringAsync();
+            }
+
             var sw = Stopwatch.StartNew();
             try
             {

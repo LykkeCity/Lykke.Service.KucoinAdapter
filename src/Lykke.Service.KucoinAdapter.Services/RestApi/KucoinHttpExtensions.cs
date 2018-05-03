@@ -11,7 +11,13 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
             this HttpResponseMessage response,
             CancellationToken ct = default(CancellationToken))
         {
-            response.EnsureSuccessStatusCode();
+            if (!response.IsSuccessStatusCode)
+            {
+                var msg = await response.Content.ReadAsStringAsync();
+                throw new HttpRequestException($"Response status does not indicate success: " +
+                                               $"{response.StatusCode:D} {response.StatusCode:G} ({msg})");
+            }
+
             var typed = await response.Content.ReadAsAsync<KucoinResponse<T>>(ct);
             typed.EnsureNoError();
             return typed.Data;

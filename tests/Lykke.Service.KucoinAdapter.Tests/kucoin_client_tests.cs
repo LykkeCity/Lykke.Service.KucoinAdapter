@@ -96,5 +96,13 @@ namespace Lykke.Service.KucoinAdapter.Tests
             var kucoinInstrument = _converter.ToKucoinInstrument(k1, k2);
             Assert.AreEqual("BTC-DENT", kucoinInstrument.Value);
         }
+
+        [Test]
+        public void instrument_parser_should_be_case_insensitive()
+        {
+            var (s1, s2) = _converter.FromLykkeInstrument(new LykkeInstrument("dentbtc"));
+            Assert.AreEqual("DENT", s1);
+            Assert.AreEqual("BTC", s2);
+        }
     }
 }

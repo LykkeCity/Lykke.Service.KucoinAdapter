@@ -24,6 +24,11 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
         {
             if (!Success)
             {
+                if (VolumeTooSmallException.TryParse(Message, out var ex))
+                {
+                    throw ex;
+                }
+
                 throw new Exception($"Erroneous response: [{Code}] {Message}");
             }
         }

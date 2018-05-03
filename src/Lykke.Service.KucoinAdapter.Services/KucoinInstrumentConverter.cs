@@ -25,19 +25,23 @@ namespace Lykke.Service.KucoinAdapter.Services
 
         public (string, string) FromLykkeInstrument(LykkeInstrument lykkeInstrument)
         {
-            var lykkeSymbol1 = _lykkeCurrencies.FirstOrDefault(lykkeInstrument.Value.StartsWith);
+            var lykkeSymbol1 = _lykkeCurrencies.FirstOrDefault(x =>
+                lykkeInstrument.Value.StartsWith(x, StringComparison.InvariantCultureIgnoreCase));
 
             if (lykkeSymbol1 == null)
             {
 
-                var lykkeSymbol2 = _lykkeCurrencies.FirstOrDefault(lykkeInstrument.Value.EndsWith);
+                var lykkeSymbol2 = _lykkeCurrencies.FirstOrDefault(x =>
+                    lykkeInstrument.Value.EndsWith(x, StringComparison.InvariantCultureIgnoreCase));
 
                 if (lykkeSymbol2 == null)
                 {
-                    throw new ArgumentException($"{lykkeInstrument.Value} cannot be parsed as pair of known currencies");
+                    throw new ArgumentException($"{lykkeInstrument.Value} cannot be parsed as pair of known symbols");
                 }
 
-                var startOfTheInstrument = lykkeInstrument.Value.Substring(0, lykkeInstrument.Value.Length - lykkeSymbol2.Length);
+                var startOfTheInstrument = lykkeInstrument.Value.Substring(
+                    0,
+                    lykkeInstrument.Value.Length - lykkeSymbol2.Length);
 
                 return (ToKucoinSymbol(startOfTheInstrument), ToKucoinSymbol(lykkeSymbol2));
             }
@@ -72,12 +76,12 @@ namespace Lykke.Service.KucoinAdapter.Services
 
         public string ToLykkeSymbol(string symbol)
         {
-            return _rename.TryGetValue(symbol, out var lykkeSymbol) ? lykkeSymbol : symbol;
+            return (_rename.TryGetValue(symbol, out var lykkeSymbol) ? lykkeSymbol : symbol).ToUpper();
         }
 
         public string ToKucoinSymbol(string symbol)
         {
-            return _inverted.TryGetValue(symbol, out var kucoinSymbol) ? kucoinSymbol : symbol;
+            return (_inverted.TryGetValue(symbol, out var kucoinSymbol) ? kucoinSymbol : symbol).ToUpper();
         }
 
         public KucoinInstrument ToKucoinInstrument(string symbol1, string symbol2)
