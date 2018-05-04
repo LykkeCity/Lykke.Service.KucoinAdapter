@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
+using Lykke.Common.ExchangeAdapter.Contracts;
+using Lykke.Common.ExchangeAdapter.SpotController.Records;
 using Lykke.Service.KucoinAdapter.Middleware;
 using Lykke.Service.KucoinAdapter.Services;
 using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using Lykke.Service.KucoinAdapter.Settings.ServiceSettings;
 using Microsoft.AspNetCore.Mvc;
-using Order = Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts.Order;
 
 namespace Lykke.Service.KucoinAdapter.Controllers
 {
@@ -29,13 +29,13 @@ namespace Lykke.Service.KucoinAdapter.Controllers
 
         [HttpGet("getWallets")]
         [XApiKeyAuth]
-        public async Task<WalletsResponse> GetWallets()
+        public async Task<GetWalletsResponse> GetWallets()
         {
             var balances = await this.RestApi().GetBalance();
 
-            return new WalletsResponse
+            return new GetWalletsResponse
             {
-                Wallets = balances.Select(x => new Wallet
+                Wallets = balances.Select(x => new WalletBalanceModel
                 {
                     Asset = _converter.ToLykkeSymbol(x.CoinType),
                     Balance = x.Balance,
@@ -58,7 +58,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
             IEnumerable<LykkeInstrument> lykkeInstruments,
             CancellationToken ct)
         {
-            var result = new List<Order>();
+            var result = new List<OrderModel>();
 
             // we are intentionally querying the exchange consequently
             foreach (var instrument in lykkeInstruments)
@@ -81,30 +81,30 @@ namespace Lykke.Service.KucoinAdapter.Controllers
             return new GetLimitOrdersResponse { Orders = result };
         }
 
-        private static Order ConvertFromShortOrder(
+        private static OrderModel ConvertFromShortOrder(
             ActiveOrder order,
             TradeType tradeType,
             LykkeInstrument lykkeInstrument,
             KucoinInstrument instrument)
         {
-            return new Order
+            return new OrderModel
             {
-                OrderId = new KucoinOrderId(instrument, order.Id, tradeType).ToApiId(),
-                Instrument = lykkeInstrument.Value,
+                Id = new KucoinOrderId(instrument, order.Id, tradeType).ToApiId(),
+                Symbol = lykkeInstrument.Value,
                 Price = order.Price,
-                OriginalAmount = order.Amount,
+                OriginalVolume = order.Amount,
                 TradeType = tradeType,
-                CreatedTime = order.DateTime,
+                Timestamp = order.DateTime,
                 AvgExecutionPrice = 0,
-                Status = OrderStatus.Active,
-                ExecutedAmount = 0,
+                ExecutionStatus = OrderStatus.Active,
+                ExecutedVolume = 0,
                 RemainingAmount = order.Amount
             };
         }
 
         [HttpPost("createLimitOrder")]
         [XApiKeyAuth]
-        public async Task<IActionResult> CreateLimitOrder([FromBody] CreateLimitOrderCommand order)
+        public async Task<IActionResult> CreateLimitOrder([FromBody] LimitOrderRequest order)
         {
             var kucoinInstrument = _converter.ToKucoinInstrument(new LykkeInstrument(order.Instrument));
 
@@ -112,13 +112,13 @@ namespace Lykke.Service.KucoinAdapter.Controllers
             {
                 var orderId = await this.RestApi().CreateLimitOrder(
                     kucoinInstrument,
-                    order.Amount,
+                    order.Volume,
                     order.Price,
                     order.TradeType);
 
                 var apiId = new KucoinOrderId(kucoinInstrument, orderId, order.TradeType).ToApiId();
 
-                return Ok(new LimitOrderCreated { Id = apiId });
+                return Ok(new CreateLimitOrderResponse { OrderId = apiId });
             }
             catch (VolumeTooSmallException ex)
             {
@@ -128,8 +128,8 @@ namespace Lykke.Service.KucoinAdapter.Controllers
 
         [HttpPost("cancelOrder")]
         [XApiKeyAuth]
-        [ProducesResponseType(typeof(ContainsOrderId), 200)]
-        public async Task<IActionResult> CancelLimitOrder(ContainsOrderId request)
+        [ProducesResponseType(typeof(CancelLimitOrderResponse), 200)]
+        public async Task<IActionResult> CancelLimitOrder(CancelLimitOrderRequest request)
         {
             if (!KucoinOrderId.TryParse(request.OrderId, out var orderId))
             {
@@ -154,19 +154,19 @@ namespace Lykke.Service.KucoinAdapter.Controllers
             return Ok(ConvertFromFullOrder(orderDetais, koId));
         }
 
-        private Order ConvertFromFullOrder(OrderDetails orderDetais, KucoinOrderId orderId)
+        private OrderModel ConvertFromFullOrder(OrderDetails orderDetais, KucoinOrderId orderId)
         {
-            return new Order
+            return new OrderModel
             {
-                OrderId = orderId.ToApiId(),
-                Instrument = _converter.ToLykkeInstrument(orderId.KucoinInstrument).Value,
+                Id = orderId.ToApiId(),
+                Symbol = _converter.ToLykkeInstrument(orderId.KucoinInstrument).Value,
                 Price = orderDetais.OrderPrice,
-                OriginalAmount = orderDetais.DealAmount,
+                OriginalVolume = orderDetais.DealAmount,
                 TradeType = ConvertTradeType(orderDetais.Type),
-                CreatedTime = new DateTime(1970, 1, 1),
+                Timestamp = new DateTime(1970, 1, 1),
                 AvgExecutionPrice =  orderDetais.DealPriceAverage,
-                Status = ConvertOrderStatus(orderDetais),
-                ExecutedAmount = orderDetais.DealAmount - orderDetais.PendingAmount,
+                ExecutionStatus = ConvertOrderStatus(orderDetais),
+                ExecutedVolume = orderDetais.DealAmount - orderDetais.PendingAmount,
                 RemainingAmount = orderDetais.PendingAmount,
             };
         }
@@ -192,7 +192,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
 
         [HttpPost("replaceLimitOrder")]
         [XApiKeyAuth]
-        [ProducesResponseType(typeof(ContainsOrderId), 200)]
+        [ProducesResponseType(typeof(OrderIdResponse), 200)]
         public IActionResult ReplaceLimitOrder(OrderDetails _)
         {
             return new StatusCodeResult(501);

@@ -1,6 +1,6 @@
 ﻿using System;
 using Common;
-using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
+using Lykke.Common.ExchangeAdapter.Contracts;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
 {

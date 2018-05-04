@@ -8,7 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Common;
 using Common.Log;
-using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
+using Lykke.Common.ExchangeAdapter.Contracts;
 using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using Newtonsoft.Json.Linq;
 

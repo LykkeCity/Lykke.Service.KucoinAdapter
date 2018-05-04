@@ -46,7 +46,7 @@ namespace Lykke.Service.KucoinAdapter.Services
                             timed.CancelAfter(_timeouts.RestApiCall);
 
                             var orderbook = await client.GetOrderbook(kucoinInstrument, limit, timed.Token);
-                            obs.OnNext(orderbook.ToOrderbook(lykkeInstrument));
+                            obs.OnNext(orderbook.ToOrderbook(lykkeInstrument.Value));
                         }
                     }
                     catch (Exception ex)
