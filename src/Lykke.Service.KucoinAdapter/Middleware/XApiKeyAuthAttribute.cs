@@ -13,13 +13,14 @@ namespace Lykke.Service.KucoinAdapter.Middleware
         public override void OnActionExecuting(ActionExecutingContext context)
         {
             if (!context.HttpContext.Request.Headers.TryGetValue(ClientTokenMiddleware.ClientTokenHeader, out var h)
-                || !h.Any())
+                || h.Count != 1)
             {
                 context.Result = new BadRequestObjectResult(
-                    $"Header {ClientTokenMiddleware.ClientTokenHeader} is required");
+                    $"Header {ClientTokenMiddleware.ClientTokenHeader} with single value is required");
+                return;
             }
 
-            if (!Credentials.TryGetValue(h.First(), out var creds))
+            if (!Credentials.TryGetValue(h[0], out var creds))
             {
                 context.Result = new UnauthorizedResult();
                 return;
