@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -22,7 +21,7 @@ namespace Lykke.Service.KucoinAdapter.Middleware
 
             if (!Credentials.TryGetValue(h[0], out var creds))
             {
-                context.Result = new UnauthorizedResult();
+                context.Result = new BadRequestObjectResult($"No {ClientTokenMiddleware.ClientTokenHeader} header");
                 return;
             }
 

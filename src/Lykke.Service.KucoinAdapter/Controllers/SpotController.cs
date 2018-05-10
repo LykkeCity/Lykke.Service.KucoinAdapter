@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace Lykke.Service.KucoinAdapter.Controllers
 {
     [Route("spot")]
-    public class SpotController : Controller
+    public class SpotController : Controller // , ISpotController
     {
         private readonly KucoinInstrumentConverter _converter;
         private readonly KucoinAdapterSettings _settings;
@@ -133,7 +133,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
         {
             if (!KucoinOrderId.TryParse(request.OrderId, out var orderId))
             {
-                return new NotFoundResult();
+                return NotFound("Wrong orderId format");
             }
 
             await this.RestApi().CancelLimitOrder(orderId);
@@ -146,7 +146,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
         {
             if (!KucoinOrderId.TryParse(orderId, out var koId))
             {
-                return new NotFoundResult();
+                return NotFound("Wrong orderId format");
             }
 
             var orderDetais = await this.RestApi().GetOrderDetails(koId);
