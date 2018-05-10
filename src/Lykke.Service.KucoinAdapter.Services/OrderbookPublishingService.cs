@@ -5,9 +5,9 @@ using System.Reactive.Disposables;
 using System.Reactive.Linq;
 using Common;
 using Common.Log;
+using Lykke.Common.ExchangeAdapter.Contracts;
 using Lykke.RabbitMqBroker.Publisher;
 using Lykke.RabbitMqBroker.Subscriber;
-using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
 using Lykke.Service.KucoinAdapter.Services.Settings;
 
 namespace Lykke.Service.KucoinAdapter.Services

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Linq;
-using Common.Log;
-using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
+using Lykke.Common.ExchangeAdapter.Contracts;
 using Newtonsoft.Json;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
@@ -25,9 +24,9 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
             set => _sell = value;
         }
 
-        public OrderBook ToOrderbook(ILog log, string asset)
+        public OrderBook ToOrderbook(string asset)
         {
-            return new OrderBook(log, KucoinExchange.ExchangeName, asset, DateTime.UtcNow,
+            return new OrderBook(KucoinExchange.ExchangeName, asset, DateTime.UtcNow,
                 bids: Buy.Select(x => new OrderBookItem(x[0], x[1])),
                 asks: Sell.Select(x => new OrderBookItem(x[0], x[1])));
         }

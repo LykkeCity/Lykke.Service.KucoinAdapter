@@ -6,7 +6,6 @@ using Common.Log;
 using Lykke.Service.KucoinAdapter.Services;
 using Lykke.Service.KucoinAdapter.Services.RestApi;
 using NUnit.Framework;
-using ObservableExtensions = System.ObservableExtensions;
 
 namespace Lykke.Service.KucoinAdapter.Tests
 {

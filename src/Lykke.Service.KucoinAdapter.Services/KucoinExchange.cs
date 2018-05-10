@@ -3,7 +3,7 @@ using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Common.Log;
-using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
+using Lykke.Common.ExchangeAdapter.Contracts;
 using Lykke.Service.KucoinAdapter.Services.RestApi;
 using Lykke.Service.KucoinAdapter.Services.Settings;
 
@@ -48,7 +48,7 @@ namespace Lykke.Service.KucoinAdapter.Services
                             timed.CancelAfter(_timeouts.RestApiCall);
 
                             var orderbook = await client.GetOrderbook(kucoinInstrument, timed.Token);
-                            obs.OnNext(orderbook.ToOrderbook(_log, lykkeInstrument));
+                            obs.OnNext(orderbook.ToOrderbook(lykkeInstrument));
                         }
                     }
                     catch (Exception ex)

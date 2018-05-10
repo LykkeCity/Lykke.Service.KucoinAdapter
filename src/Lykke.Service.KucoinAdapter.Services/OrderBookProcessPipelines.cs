@@ -1,15 +1,20 @@
 ﻿using System;
 using System.Reactive.Linq;
 using Common.Log;
-using Lykke.Service.KucoinAdapter.Core.Domain.SharedContracts;
+using Lykke.Common.ExchangeAdapter.Contracts;
 
 namespace Lykke.Service.KucoinAdapter.Services
 {
     public static class OrderBookProcessPipelines
     {
+        private static (bool, string, OrderBook) FromTryGetPattern(OrderBook orderBook)
+        {
+            return (orderBook.TryDetectNegativeSpread(out var error), error, orderBook);
+        }
+
         public static IObservable<OrderBook> DetectNegativeSpread(this IObservable<OrderBook> source, ILog log)
         {
-            return source.Select(x => OrderBookExtensions.DetectNegativeSpread(x))
+            return source.Select(FromTryGetPattern)
                 .GroupBy(x => x.Item1)
                 .Select(group =>
                 {
@@ -47,7 +52,8 @@ namespace Lykke.Service.KucoinAdapter.Services
         public static IObservable<OrderBook> FilterWithReport(this IObservable<OrderBook> source, ILog log)
         {
             return source
-                .DetectNegativeSpread(log);
+                .DetectNegativeSpread(log)
+                .DistinctUntilChanged();
         }
     }
 }
