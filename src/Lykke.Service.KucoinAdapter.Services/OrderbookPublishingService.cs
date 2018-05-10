@@ -48,12 +48,9 @@ namespace Lykke.Service.KucoinAdapter.Services
             string instrument,
             KucoinExchange exchange)
         {
-            var orderBooks = exchange.GetOrderbooks(instrument)
-                .Select(x => x.DetectNegativeSpread())
-                .Do(x => ReportNegativeSpread(x.Item1, x.Item2),
-                    err => _log.WriteInfo(nameof(OrderbookPublishingService), "orderbooks", err.ToString()))
-                .Where(x => !x.Item1).Select(x => x.Item3)
-                .Where(SkipEmptyOrderBooks)
+            var orderBooks = exchange
+                .GetOrderbooks(instrument)
+                .FilterWithReport(_log)
                 .RetryWithBackoff()
                 .Publish()
                 .RefCount();
@@ -74,16 +71,6 @@ namespace Lykke.Service.KucoinAdapter.Services
                     tickPricePublishWorker,
                     orderBooksPublishWorker)
                 .Subscribe();
-        }
-
-        private static bool SkipEmptyOrderBooks(OrderBook ob)
-        {
-            return ob.Asks.Any() || ob.Bids.Any();
-        }
-
-        private void ReportNegativeSpread(bool hasNegativeSpread, string error)
-        {
-            if (hasNegativeSpread) _log.WriteInfo(nameof(OrderbookPublishingService), "", error);
         }
 
         private IObservable<Unit> ReportStatistic(IObservable<Unit> source, string exchanger, string instrument)
