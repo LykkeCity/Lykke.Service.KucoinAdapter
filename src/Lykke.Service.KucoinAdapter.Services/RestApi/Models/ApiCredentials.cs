@@ -1,5 +1,6 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using Lykke.SettingsReader.Attributes;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
 {
@@ -9,6 +10,8 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
         {
         }
 
+        [Optional]
+        public string InternalApiKey { get; set; }
         public string ApiKey { get; set; }
         public string Secret { get; set; }
 

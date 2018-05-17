@@ -14,7 +14,6 @@ namespace Lykke.Service.KucoinAdapter.Settings.ServiceSettings
 
         public RabbitMqSettings RabbitMq { get; set; }
 
-        [JsonConverter(typeof(CredentialsConverter<ApiCredentials>))]
-        public IReadOnlyDictionary<string, ApiCredentials> Clients { get; set; }
+        public IReadOnlyCollection<ApiCredentials> Clients { get; set; }
     }
 }

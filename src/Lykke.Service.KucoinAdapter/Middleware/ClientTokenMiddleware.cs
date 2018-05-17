@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Common.Log;
 using Lykke.Service.KucoinAdapter.Services.RestApi;
 using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
@@ -34,14 +35,15 @@ namespace Lykke.Service.KucoinAdapter.Middleware
             {
                 if (context.Request.Headers.TryGetValue(ClientTokenHeader, out var token))
                 {
-                    if (appSettings.CurrentValue.KucoinAdapterService.Clients.TryGetValue(
-                        token.FirstOrDefault(),
-                        out var creds))
+                    var creds = appSettings.CurrentValue.KucoinAdapterService.Clients.FirstOrDefault(
+                        x => x.InternalApiKey.Equals(
+                            token.FirstOrDefault(),
+                            StringComparison.InvariantCultureIgnoreCase));
 
-                        if (creds != null)
-                        {
-                            context.Items[CredsKey] = new RestApiClient(creds, log);
-                        }
+                    if (creds != null)
+                    {
+                        context.Items[CredsKey] = new RestApiClient(creds, log);
+                    }
                 }
                 else
                 {

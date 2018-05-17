@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Autofac;
 using Autofac.Extensions.DependencyInjection;
@@ -58,7 +59,8 @@ namespace Lykke.Service.KucoinAdapter
                 var builder = new ContainerBuilder();
                 _appSettings = Configuration.LoadSettings<AppSettings>();
 
-                XApiKeyAuthAttribute.Credentials = _appSettings.CurrentValue.KucoinAdapterService.Clients;
+                XApiKeyAuthAttribute.Credentials = _appSettings.CurrentValue.KucoinAdapterService.Clients
+                    .ToDictionary(x => x.InternalApiKey);
 
                 Log = CreateLogWithSlack(services, _appSettings);
 
