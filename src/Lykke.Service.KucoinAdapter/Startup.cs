@@ -89,6 +89,8 @@ namespace Lykke.Service.KucoinAdapter
                 app.UseLykkeForwardedHeaders();
                 app.UseLykkeMiddleware("KucoinAdapter", ex => new { Message = "Technical problem" });
 
+                app.UseHandleBusinessExceptionsMiddleware();
+
                 app.UseAuthenticationMiddleware(_appSettings, Log);
 
                 app.UseMvc();

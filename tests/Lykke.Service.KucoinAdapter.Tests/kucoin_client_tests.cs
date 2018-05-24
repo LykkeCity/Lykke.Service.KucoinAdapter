@@ -36,7 +36,7 @@ namespace Lykke.Service.KucoinAdapter.Tests
                 knownCurrencies,
                 new Dictionary<string, string>
                 {
-                    {"BTC", "XBT"},
+                    {"BTC", "1BT"},
                     {"R", "RCURRENCY"}
                 });
         }
@@ -87,7 +87,7 @@ namespace Lykke.Service.KucoinAdapter.Tests
             Assert.AreEqual("DENT", s2);
 
             var lykkeInstrument = _converter.ToLykkeInstrument(s1, s2);
-            Assert.AreEqual("XBTDENT", lykkeInstrument.Value);
+            Assert.AreEqual("1BTDENT", lykkeInstrument.Value);
 
             var (k1, k2) = _converter.FromLykkeInstrument(lykkeInstrument);
             Assert.AreEqual("BTC", k1);

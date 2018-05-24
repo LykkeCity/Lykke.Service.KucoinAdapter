@@ -148,14 +148,13 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
             KucoinOrderId orderId,
             CancellationToken ct = default(CancellationToken))
         {
-            var content = new FormUrlEncodedContent(new Dictionary<string, string>
-            {
-                { "orderId", orderId.OrderId.ToHexString() },
-                { "type", ConvertTradeType(orderId.TradeType) }
-            });
+            var content = new FormUrlEncodedContent(Enumerable.Empty<KeyValuePair<string, string>>());
 
             using (var msg = await _client.PostAsJsonAsync(
-                $"cancel-order?symbol={orderId.KucoinInstrument.Value}",
+                $"cancel-order" +
+                $"?symbol={orderId.KucoinInstrument.Value}" +
+                $"&orderOid={orderId.OrderId.ToHexString()}" +
+                $"&type={ConvertTradeType(orderId.TradeType)}",
                 content,
                 ct))
             {

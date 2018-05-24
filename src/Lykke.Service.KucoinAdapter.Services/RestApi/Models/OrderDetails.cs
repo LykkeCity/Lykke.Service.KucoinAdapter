@@ -39,5 +39,8 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
 
         [JsonProperty("pendingAmount")]
         public decimal PendingAmount { get; set; }
+
+        [JsonProperty("createdAt")]
+        public long CreatedAt { get; set; }
     }
 }

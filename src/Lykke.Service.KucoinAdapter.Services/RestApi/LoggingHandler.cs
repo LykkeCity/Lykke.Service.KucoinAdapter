@@ -21,10 +21,13 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
             HttpRequestMessage request,
             CancellationToken cancellationToken)
         {
+            var requestPart = "GET";
+            var responsePart = "<empty>";
+
             var query = $"{request.Method} {request.RequestUri}";
             if (request.Method == HttpMethod.Post)
             {
-                query += " <- " + await request.Content.ReadAsStringAsync();
+                requestPart = await request.Content.ReadAsStringAsync();
             }
 
             var sw = Stopwatch.StartNew();
@@ -34,14 +37,34 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
 
                 if (!IgnoreSuccess(request.RequestUri))
                 {
-                    _log.WriteInfo(nameof(LoggingHandler), query, $"send has taken {sw.Elapsed}");
+                    if (result.Content != null)
+                    {
+                        responsePart = await result.Content.ReadAsStringAsync();
+                    }
+
+                    var context = new
+                    {
+                        Request = requestPart,
+                        Response = responsePart,
+                        Elapsed = sw.Elapsed
+                    };
+
+                    _log.WriteInfo(nameof(LoggingHandler), context, request.RequestUri.PathAndQuery);
                 }
 
                 return result;
             }
             catch (Exception ex)
             {
-                _log.WriteInfo(nameof(LoggingHandler), query, $"Request to {query} failed in {sw.Elapsed}: " + ex);
+                var context = new
+                {
+                    Request = requestPart,
+                    Response = responsePart,
+                    Elapsed = sw.Elapsed,
+                    Error = ex.Message
+                };
+
+                _log.WriteInfo(nameof(LoggingHandler), context, request.RequestUri.PathAndQuery);
                 throw;
             }
         }

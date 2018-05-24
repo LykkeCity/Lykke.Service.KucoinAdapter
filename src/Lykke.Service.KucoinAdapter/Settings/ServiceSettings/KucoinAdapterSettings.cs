@@ -1,8 +1,6 @@
 ﻿using System.Collections.Generic;
-using Lykke.Common.ExchangeAdapter.Settings;
 using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
 using Lykke.Service.KucoinAdapter.Services.Settings;
-using Newtonsoft.Json;
 
 namespace Lykke.Service.KucoinAdapter.Settings.ServiceSettings
 {

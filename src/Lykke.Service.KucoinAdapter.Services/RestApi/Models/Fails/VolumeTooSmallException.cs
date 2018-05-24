@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text.RegularExpressions;
 
-namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
+namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models.Fails
 {
     public class VolumeTooSmallException: Exception
     {

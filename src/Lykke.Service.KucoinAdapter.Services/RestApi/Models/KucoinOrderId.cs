@@ -1,5 +1,6 @@
 ﻿using System;
 using Common;
+using JetBrains.Annotations;
 using Lykke.Common.ExchangeAdapter.Contracts;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
@@ -22,8 +23,10 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
             return $"{KucoinInstrument.Value.Replace(":", "")}:{TradeType:G}:{OrderId.ToHexString()}";
         }
 
-        public static KucoinOrderId? Parse(string source)
+        public static KucoinOrderId? Parse([NotNull] string source)
         {
+            if (source == null) throw new ArgumentNullException(nameof(source));
+
             var parts = source.Split(":", 3);
 
             if (parts.Length != 3) return null;

@@ -1,5 +1,6 @@
 ﻿using System;
 using Common;
+using Lykke.Common.ExchangeAdapter;
 using Newtonsoft.Json.Linq;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
@@ -19,13 +20,19 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
                 throw new ArgumentException($"Expected JArray of 6 elements, got  {arr.Count}", nameof(arr));
             }
 
+            var dt = arr[0].Value<long>().FromKuckoinDateTime();
+            var price = arr[2].Value<decimal>();
+            var amount = arr[3].Value<decimal>();
+            var dealAmount = arr[4].Value<decimal>();
+            var id = arr[5].Value<string>().GetHexStringToBytes();
+
             return new ActiveOrder
             {
-                DateTime = arr[0].Value<uint>().FromUnixDateTime(),
-                Price = arr[2].Value<decimal>(),
-                Amount = arr[3].Value<decimal>(),
-                DealAmount = arr[4].Value<decimal>(),
-                Id = arr[5].Value<string>().GetHexStringToBytes()
+                DateTime = dt,
+                Price = price,
+                Amount = amount,
+                DealAmount = dealAmount,
+                Id = id
             };
         }
     }

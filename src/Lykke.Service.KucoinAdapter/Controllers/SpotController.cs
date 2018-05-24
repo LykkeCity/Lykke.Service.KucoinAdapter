@@ -4,17 +4,20 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Lykke.Common.ExchangeAdapter.Contracts;
+using Lykke.Common.ExchangeAdapter.SpotController;
 using Lykke.Common.ExchangeAdapter.SpotController.Records;
 using Lykke.Service.KucoinAdapter.Middleware;
 using Lykke.Service.KucoinAdapter.Services;
+using Lykke.Service.KucoinAdapter.Services.RestApi;
 using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
+using Lykke.Service.KucoinAdapter.Services.RestApi.Models.Fails;
 using Lykke.Service.KucoinAdapter.Settings.ServiceSettings;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Lykke.Service.KucoinAdapter.Controllers
 {
     [Route("spot")]
-    public class SpotController : Controller // , ISpotController
+    public class SpotController : Controller // ISpotController
     {
         private readonly KucoinInstrumentConverter _converter;
         private readonly KucoinAdapterSettings _settings;
@@ -29,7 +32,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
 
         [HttpGet("getWallets")]
         [XApiKeyAuth]
-        public async Task<GetWalletsResponse> GetWallets()
+        public async Task<GetWalletsResponse> GetWalletBalancesAsync()
         {
             var balances = await this.RestApi().GetBalance();
 
@@ -47,7 +50,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
         [HttpGet("GetLimitOrders")]
         [XApiKeyAuth]
         [ProducesResponseType(typeof(GetLimitOrdersResponse), 200)]
-        public async Task<GetLimitOrdersResponse> GetOrders(CancellationToken ct)
+        public async Task<GetLimitOrdersResponse> GetLimitOrdersAsync(CancellationToken ct)
         {
             return await GetLimitOrdersByInstrument(
                 _settings.Orderbooks.Instruments.Select(x => new LykkeInstrument(x)),
@@ -104,77 +107,86 @@ namespace Lykke.Service.KucoinAdapter.Controllers
 
         [HttpPost("createLimitOrder")]
         [XApiKeyAuth]
-        public async Task<IActionResult> CreateLimitOrder([FromBody] LimitOrderRequest order)
+        public async Task<OrderIdResponse> CreateLimitOrderAsync([FromBody] LimitOrderRequest order)
         {
             var kucoinInstrument = _converter.ToKucoinInstrument(new LykkeInstrument(order.Instrument));
 
-            try
-            {
-                var orderId = await this.RestApi().CreateLimitOrder(
-                    kucoinInstrument,
-                    order.Volume,
-                    order.Price,
-                    order.TradeType);
+            var orderId = await this.RestApi().CreateLimitOrder(
+                kucoinInstrument,
+                order.Volume,
+                order.Price,
+                order.TradeType);
 
-                var apiId = new KucoinOrderId(kucoinInstrument, orderId, order.TradeType).ToApiId();
+            var apiId = new KucoinOrderId(kucoinInstrument, orderId, order.TradeType).ToApiId();
 
-                return Ok(new CreateLimitOrderResponse { OrderId = apiId });
-            }
-            catch (VolumeTooSmallException ex)
-            {
-                return BadRequest($"volumeTooSmall: {ex.Message}");
-            }
+            return new OrderIdResponse {OrderId = apiId};
         }
 
         [HttpPost("cancelOrder")]
         [XApiKeyAuth]
-        [ProducesResponseType(typeof(CancelLimitOrderResponse), 200)]
-        public async Task<IActionResult> CancelLimitOrder(CancelLimitOrderRequest request)
+        public async Task<CancelLimitOrderResponse> CancelLimitOrderAsync([FromBody]CancelLimitOrderRequest request)
         {
             if (!KucoinOrderId.TryParse(request.OrderId, out var orderId))
             {
-                return NotFound("Wrong orderId format");
+                throw new InvalidOrderIdException();
             }
 
             await this.RestApi().CancelLimitOrder(orderId);
-            return Ok(request);
+            return new CancelLimitOrderResponse{ OrderId = request.OrderId };
         }
 
         [HttpGet("LimitOrderStatus")]
         [XApiKeyAuth]
-        public async Task<IActionResult> GetOrderStatus(string orderId)
+        public async Task<OrderModel> LimitOrderStatusAsync(string orderId)
         {
             if (!KucoinOrderId.TryParse(orderId, out var koId))
             {
-                return NotFound("Wrong orderId format");
+                throw new InvalidOrderIdException();
             }
 
             var orderDetais = await this.RestApi().GetOrderDetails(koId);
 
-            return Ok(ConvertFromFullOrder(orderDetais, koId));
+            var activeOrders = await this.RestApi().GetActiveOrders(koId.KucoinInstrument);
+
+            IReadOnlyCollection<ActiveOrder> orders;
+
+            switch (koId.TradeType)
+            {
+                case TradeType.Buy:
+                    orders = activeOrders.Buy;
+                    break;
+                case TradeType.Sell:
+                    orders = activeOrders.Sell;
+                    break;
+                default:
+                    throw new ArgumentOutOfRangeException();
+            }
+
+            return ConvertFromFullOrder(orderDetais, koId, orders.Any(x => x.Id.SequenceEqual(koId.OrderId)));
         }
 
-        private OrderModel ConvertFromFullOrder(OrderDetails orderDetais, KucoinOrderId orderId)
+        private OrderModel ConvertFromFullOrder(OrderDetails orderDetais, KucoinOrderId orderId, bool isActive)
         {
             return new OrderModel
             {
                 Id = orderId.ToApiId(),
                 Symbol = _converter.ToLykkeInstrument(orderId.KucoinInstrument).Value,
                 Price = orderDetais.OrderPrice,
-                OriginalVolume = orderDetais.DealAmount,
+                OriginalVolume = orderDetais.DealAmount + orderDetais.PendingAmount,
                 TradeType = ConvertTradeType(orderDetais.Type),
-                Timestamp = new DateTime(1970, 1, 1),
+                Timestamp = orderDetais.CreatedAt.FromKuckoinDateTime(),
                 AvgExecutionPrice =  orderDetais.DealPriceAverage,
-                ExecutionStatus = ConvertOrderStatus(orderDetais),
-                ExecutedVolume = orderDetais.DealAmount - orderDetais.PendingAmount,
+                ExecutionStatus = ConvertOrderStatus(orderDetais, isActive),
+                ExecutedVolume = orderDetais.DealAmount,
                 RemainingAmount = orderDetais.PendingAmount,
             };
         }
 
-        private static OrderStatus ConvertOrderStatus(OrderDetails orderDetais)
+        private static OrderStatus ConvertOrderStatus(OrderDetails orderDetais, bool isActive)
         {
-            if (orderDetais.PendingAmount != 0) return OrderStatus.Active;
-            return OrderStatus.Fill;
+            if (isActive) return OrderStatus.Active;
+
+            return orderDetais.DealAmount == 0 ? OrderStatus.Canceled : OrderStatus.Fill;
         }
 
         private TradeType ConvertTradeType(KucoinTradeType orderDetaisType)

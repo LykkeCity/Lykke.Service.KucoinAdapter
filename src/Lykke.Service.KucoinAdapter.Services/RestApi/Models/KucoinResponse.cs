@@ -1,4 +1,5 @@
 ﻿using System;
+using Lykke.Service.KucoinAdapter.Services.RestApi.Models.Fails;
 using Newtonsoft.Json;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models

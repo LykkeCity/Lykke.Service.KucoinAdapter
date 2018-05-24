@@ -1,4 +1,5 @@
-﻿using System.Net.Http;
+﻿using System;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using Lykke.Service.KucoinAdapter.Services.RestApi.Models;
@@ -7,6 +8,11 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
 {
     public static class KucoinHttpExtensions
     {
+        public static DateTime FromKuckoinDateTime(this long milliseconds)
+        {
+            return new DateTime(1970, 1, 1) + TimeSpan.FromMilliseconds(milliseconds);
+        }
+
         public static async Task<T> ReadAsKucoin<T>(
             this HttpResponseMessage response,
             CancellationToken ct = default(CancellationToken))
