@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reactive.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -29,7 +29,7 @@ namespace Lykke.Service.KucoinAdapter.Services
             _timeouts = timeouts;
         }
 
-        public IObservable<OrderBook> GetOrderbooks(string lykkeInstrument)
+        public IObservable<OrderBook> GetOrderbooks(string lykkeInstrument, uint limit)
         {
             return Observable.Create<OrderBook>(async (obs, ct) =>
             {
@@ -47,7 +47,7 @@ namespace Lykke.Service.KucoinAdapter.Services
                         {
                             timed.CancelAfter(_timeouts.RestApiCall);
 
-                            var orderbook = await client.GetOrderbook(kucoinInstrument, timed.Token);
+                            var orderbook = await client.GetOrderbook(kucoinInstrument, limit, timed.Token);
                             obs.OnNext(orderbook.ToOrderbook(lykkeInstrument));
                         }
                     }

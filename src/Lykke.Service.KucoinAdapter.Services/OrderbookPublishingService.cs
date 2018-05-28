@@ -49,7 +49,7 @@ namespace Lykke.Service.KucoinAdapter.Services
             KucoinExchange exchange)
         {
             var orderBooks = exchange
-                .GetOrderbooks(instrument)
+                .GetOrderbooks(instrument, _orderbookSettings.Depth)
                 .FilterWithReport(_log)
                 .RetryWithBackoff()
                 .Publish()

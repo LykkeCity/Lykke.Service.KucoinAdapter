@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Net.Http;
@@ -67,9 +67,10 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi
 
         public async Task<KucoinOrderbook> GetOrderbook(
             string instrument,
+            uint limit,
             CancellationToken ct = default(CancellationToken))
         {
-            var response = await _client.GetAsync($"open/orders?symbol={WebUtility.UrlEncode(instrument)}", ct);
+            var response = await _client.GetAsync($"open/orders?symbol={WebUtility.UrlEncode(instrument)}&limit={limit}", ct);
             return await response.ReadAsKucoin<KucoinOrderbook>(ct);
         }
     }
