@@ -165,6 +165,13 @@ namespace Lykke.Service.KucoinAdapter.Controllers
             return ConvertFromFullOrder(orderDetais, koId, orders.Any(x => x.Id.SequenceEqual(koId.OrderId)));
         }
 
+        [HttpGet("GetInstruments")]
+        [XApiKeyAuth]
+        public async Task<string[]> GetInstruments()
+        {
+            return (await this.RestApi().GetSymbols()).Select(x => x.Symbol).ToArray();
+        }
+
         private OrderModel ConvertFromFullOrder(OrderDetails orderDetais, KucoinOrderId orderId, bool isActive)
         {
             return new OrderModel
