@@ -25,12 +25,19 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
         {
             if (!Success)
             {
-                if (VolumeTooSmallException.TryParse(Message, out var ex))
                 {
-                    throw ex;
-                }
+                    if (VolumeTooSmallException.TryParse(Message, out var vtsEx))
+                    {
+                        throw vtsEx;
+                    }
 
-                throw new Exception($"Erroneous response: [{Code}] {Message}");
+                    if (NoBalanceException.TryParse(Code, out var nbEx))
+                    {
+                        throw nbEx;
+                    }
+
+                    throw new Exception($"Erroneous response: [{Code}] {Message}");
+                }
             }
         }
     }

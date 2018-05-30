@@ -2,6 +2,7 @@
 using Common;
 using JetBrains.Annotations;
 using Lykke.Common.ExchangeAdapter.Contracts;
+using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
 {
@@ -23,9 +24,9 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
             return $"{KucoinInstrument.Value.Replace(":", "")}:{TradeType:G}:{OrderId.ToHexString()}";
         }
 
-        public static KucoinOrderId? Parse([NotNull] string source)
+        public static KucoinOrderId? Parse(string source)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
+            if (source == null) return null;
 
             var parts = source.Split(":", 3);
 
@@ -45,6 +46,12 @@ namespace Lykke.Service.KucoinAdapter.Services.RestApi.Models
 
         public static bool TryParse(string source, out KucoinOrderId orderId)
         {
+            if (source == null)
+            {
+                orderId = default(KucoinOrderId);
+                return false;
+            }
+
             var parsed = Parse(source);
             if (parsed.HasValue)
             {

@@ -29,13 +29,20 @@ namespace Lykke.Service.KucoinAdapter.Middleware
             {
                 MakeBadRequest(httpContext, "orderIdFormat");
             }
+            catch (NoBalanceException)
+            {
+                MakeBadRequest(httpContext, "notEnoughBalance");
+            }
         }
 
         private static void MakeBadRequest(HttpContext httpContext, string error)
         {
-            var body = new MemoryStream(Encoding.UTF8.GetBytes(error));
-            httpContext.Response.Body = body;
-            httpContext.Response.StatusCode = 400;
+            using (var body = new MemoryStream(Encoding.UTF8.GetBytes(error)))
+            {
+                httpContext.Response.ContentType = "text/plain";
+                httpContext.Response.StatusCode = 400;
+                body.CopyTo(httpContext.Response.Body);
+            }
         }
     }
 }

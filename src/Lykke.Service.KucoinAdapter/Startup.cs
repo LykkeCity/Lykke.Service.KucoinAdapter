@@ -12,6 +12,7 @@ using Lykke.Service.KucoinAdapter.Core.Services;
 using Lykke.Service.KucoinAdapter.Middleware;
 using Lykke.Service.KucoinAdapter.Settings;
 using Lykke.Service.KucoinAdapter.Modules;
+using Lykke.Service.KucoinAdapter.Validation;
 using Lykke.SettingsReader;
 using Lykke.SlackNotification.AzureQueue;
 using Microsoft.AspNetCore.Builder;
@@ -43,6 +44,13 @@ namespace Lykke.Service.KucoinAdapter
         {
             try
             {
+                services.AddMvc(options => { options.Filters.Add<ValidateModelAttribute>(); })
+                    .AddJsonOptions(options =>
+                    {
+                        options.SerializerSettings.ContractResolver =
+                            new Newtonsoft.Json.Serialization.DefaultContractResolver();
+                    });
+
                 services.AddMvc()
                     .AddJsonOptions(options =>
                     {
