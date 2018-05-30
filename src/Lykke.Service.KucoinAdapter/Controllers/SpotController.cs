@@ -212,7 +212,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
         [HttpPost("replaceLimitOrder")]
         [XApiKeyAuth]
         [ProducesResponseType(typeof(OrderIdResponse), 200)]
-        public IActionResult ReplaceLimitOrder([FromBody]OrderDetails _)
+        public IActionResult ReplaceLimitOrder([FromBody]ReplaceLimitOrderRequest _)
         {
             return new StatusCodeResult(501);
         }
