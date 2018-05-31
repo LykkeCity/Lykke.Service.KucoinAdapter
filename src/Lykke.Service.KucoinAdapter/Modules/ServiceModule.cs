@@ -50,14 +50,15 @@ namespace Lykke.Service.KucoinAdapter.Modules
             var kucoinAdapterSettings = _settings.CurrentValue;
 
             builder.RegisterType<KucoinInstrumentConverter>()
-                .WithParameter("knownCurrencies", kucoinAdapterSettings.Orderbooks.CurrencyMapping.KnownCurrencies)
-                .WithParameter("rename", kucoinAdapterSettings.Orderbooks.CurrencyMapping.Rename)
+                .WithParameter("knownCurrencies", kucoinAdapterSettings.Currencies.KnownCurrencies)
+                .WithParameter("rename", kucoinAdapterSettings.Currencies.Rename)
                 .AsSelf()
                 .SingleInstance();
 
             builder.RegisterType<OrderbookPublishingService>()
                 .WithParameter("orderbookSettings", kucoinAdapterSettings.Orderbooks)
                 .WithParameter("rabbitMqSettings", kucoinAdapterSettings.RabbitMq)
+                .WithParameter("currencySettings", kucoinAdapterSettings.Currencies)
                 .As<IStopable>()
                 .AsSelf()
                 .SingleInstance();

@@ -33,6 +33,10 @@ namespace Lykke.Service.KucoinAdapter.Middleware
             {
                 MakeBadRequest(httpContext, "notEnoughBalance");
             }
+            catch (InvalidInstrumentException)
+            {
+                MakeBadRequest(httpContext, "instrumentIsNotSupported");
+            }
         }
 
         private static void MakeBadRequest(HttpContext httpContext, string error)

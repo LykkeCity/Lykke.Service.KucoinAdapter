@@ -10,6 +10,8 @@ namespace Lykke.Service.KucoinAdapter.Settings.ServiceSettings
 
         public OrderbookSettings Orderbooks { get; set; }
 
+        public CurrencySettings Currencies { get; set; }
+
         public RabbitMqSettings RabbitMq { get; set; }
 
         public IReadOnlyCollection<ApiCredentials> Clients { get; set; }

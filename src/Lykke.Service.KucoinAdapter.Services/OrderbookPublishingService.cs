@@ -16,6 +16,7 @@ namespace Lykke.Service.KucoinAdapter.Services
     {
         private readonly OrderbookSettings _orderbookSettings;
         private readonly RabbitMqSettings _rabbitMqSettings;
+        private readonly CurrencySettings _currencySettings;
         private readonly KucoinInstrumentConverter _converter;
         private readonly ILog _log;
         private readonly object _syncRoot = new object();
@@ -24,11 +25,13 @@ namespace Lykke.Service.KucoinAdapter.Services
         public OrderbookPublishingService(
             OrderbookSettings orderbookSettings,
             RabbitMqSettings rabbitMqSettings,
+            CurrencySettings currencySettings,
             KucoinInstrumentConverter converter,
             ILog log)
         {
             _orderbookSettings = orderbookSettings;
             _rabbitMqSettings = rabbitMqSettings;
+            _currencySettings = currencySettings;
             _converter = converter;
             _log = log;
         }
@@ -47,7 +50,7 @@ namespace Lykke.Service.KucoinAdapter.Services
                     _orderbookSettings.Timeouts,
                     _converter);
 
-                var workers = _orderbookSettings.Instruments
+                var workers = _currencySettings.SupportedInstruments
                     .Select(x => StartPublishing(new LykkeInstrument(x), exchange));
 
                 _subscription = new CompositeDisposable(workers);

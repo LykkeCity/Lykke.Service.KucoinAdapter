@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Lykke.Common.ExchangeAdapter.Contracts;
 using Lykke.Common.ExchangeAdapter.SpotController;
 using Lykke.Common.ExchangeAdapter.SpotController.Records;
+using Lykke.Logs;
 using Lykke.Service.KucoinAdapter.Middleware;
 using Lykke.Service.KucoinAdapter.Services;
 using Lykke.Service.KucoinAdapter.Services.RestApi;
@@ -54,7 +55,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
         public async Task<GetLimitOrdersResponse> GetLimitOrdersAsync(CancellationToken ct)
         {
             return await GetLimitOrdersByInstrument(
-                _settings.Orderbooks.Instruments.Select(x => new LykkeInstrument(x)),
+                _settings.Currencies.SupportedInstruments.Select(x => new LykkeInstrument(x)),
                 ct);
         }
 
@@ -110,7 +111,10 @@ namespace Lykke.Service.KucoinAdapter.Controllers
         [XApiKeyAuth]
         public async Task<OrderIdResponse> CreateLimitOrderAsync([FromBody] LimitOrderRequest order)
         {
-            var kucoinInstrument = _converter.ToKucoinInstrument(new LykkeInstrument(order.Instrument));
+            var lykkeInstrument = new LykkeInstrument(order.Instrument);
+            EnsureInstrumentIsSupported(lykkeInstrument);
+
+            var kucoinInstrument = _converter.ToKucoinInstrument(lykkeInstrument);
 
             var orderId = await this.RestApi().CreateLimitOrder(
                 kucoinInstrument,
@@ -121,6 +125,15 @@ namespace Lykke.Service.KucoinAdapter.Controllers
             var apiId = new KucoinOrderId(kucoinInstrument, orderId, order.TradeType).ToApiId();
 
             return new OrderIdResponse {OrderId = apiId};
+        }
+
+        private void EnsureInstrumentIsSupported(LykkeInstrument lykkeInstrument)
+        {
+            if (!_settings.Currencies.SupportedInstruments.Any(x =>
+                lykkeInstrument.Value.Equals(x, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                throw new InvalidInstrumentException(lykkeInstrument.Value);
+            }
         }
 
         [HttpPost("cancelOrder")]
