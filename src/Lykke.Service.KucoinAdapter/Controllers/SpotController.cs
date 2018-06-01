@@ -43,7 +43,7 @@ namespace Lykke.Service.KucoinAdapter.Controllers
                 Wallets = balances.Select(x => new WalletBalanceModel
                 {
                     Asset = _converter.ToLykkeSymbol(x.CoinType),
-                    Balance = x.Balance,
+                    Balance = x.Balance + x.FreezeBalance,
                     Reserved = x.FreezeBalance
                 }).ToArray()
             };
